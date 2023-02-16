@@ -1,0 +1,28 @@
+name: bicep_build
+on: [push]
+jobs: 
+  bicep-build:
+    name: bicep-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Run bicep lint
+        uses: synergy-au/bicep-lint-action@v1
+        with:
+          analyse-all-files: 'true'
+      - name: Run bicep build
+        uses: Azure/bicep-build-action@v1.0.0
+        with:
+          bicepFilePath: main.bicep
+          outputFilePath: marketplace/azureDeploy.json
+      - name: Add new template
+        run: git add marketplace/azureDeploy.json
+      - name: Commit the template
+        uses: swinton/commit@v2.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            marketplace/azureDeploy.json
+          commit-message: "Commiting new templates"
