@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.6.61914",
-      "templateHash": "1141079199111176485"
+      "templateHash": "17193133830405447153"
     }
   },
   "parameters": {
@@ -130,7 +130,7 @@
         "containerSettings": {
           "containerGroupName": "[format('{0}ci1', uniqueString(resourceGroup().id))]"
         },
-        "primaryScriptUri": "https://raw.githubusercontent.com/caleteeter/pg-test/main/scripts/deploy3.sh",
+        "primaryScriptUri": "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/deploy.sh",
         "timeout": "PT30M",
         "cleanupPreference": "OnSuccess",
         "azCliVersion": "2.28.0",
@@ -371,7 +371,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/caleteeter/pg-test/main/scripts/deploy4.sh"
+            "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
           ],
           "commandToExecute": "[format('/bin/bash deploy4.sh {0} {1} {2}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), range(0, 4)[copyIndex()])]"
         }
