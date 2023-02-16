@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.6.61914",
-      "templateHash": "17193133830405447153"
+      "templateHash": "10898811682210035107"
     }
   },
   "parameters": {
@@ -373,7 +373,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
           ],
-          "commandToExecute": "[format('/bin/bash deploy4.sh {0} {1} {2}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), range(0, 4)[copyIndex()])]"
+          "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), range(0, 4)[copyIndex()])]"
         }
       },
       "dependsOn": [
