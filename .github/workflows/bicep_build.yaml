@@ -1,4 +1,4 @@
-name: bicep_build
+name: bicep-build
 on: [push]
 jobs: 
   bicep-build:
