@@ -24,11 +24,11 @@ The flow for resource provisioning is as follows:
 
 2. The Azure Key Vault is created that will be used to store assets such as keys and configuration for the nodes.  The managed identity from step 1 will be granted rights to secrets, both read and write.
 
-3. The Deployment Script resource will be created that will leverage the [deploy](deploy.sh) script.  This script will generate the keys and configuration for the nodes that will be provisioned in a later step.  These resources will be stored in the Azure Key Vault.
+3. The Deployment Script resource will be created that will leverage the [deploy](../scripts/deploy.sh) script.  This script will generate the keys and configuration for the nodes that will be provisioned in a later step.  These resources will be stored in the Azure Key Vault.
 
 4. The 4 Virtual Machines will be created, based on the size passed as a parameter to the template.
 
-    a. Each Virtual Machine includes a VM extension that uses the [clientDeploy](clientDeploy.sh) script.  This script will run after the machine is created and will pull the configuration and keys for itself from the Azure Key Vault, using the Managed Identity provisioned in step 1.
+    a. Each Virtual Machine includes a VM extension that uses the [clientDeploy](../scripts/clientDeploy.sh) script.  This script will run after the machine is created and will pull the configuration and keys for itself from the Azure Key Vault, using the Managed Identity provisioned in step 1.
 
     b. The core process for the validator will then be started using the configuration / keys from the step above.
 
