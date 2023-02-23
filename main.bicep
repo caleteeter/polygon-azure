@@ -176,11 +176,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           privateIPAddressVersion: 'IPv4'
           loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 7 ? [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbrpcbe')
             }
           ] : [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbidxbe')
             }
           ]))
         }
