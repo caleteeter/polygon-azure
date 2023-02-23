@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.46.61228",
-      "templateHash": "490791924302707455"
+      "templateHash": "10266732318003063399"
     }
   },
   "parameters": {
@@ -228,7 +228,7 @@
               },
               "primary": true,
               "privateIPAddressVersion": "IPv4",
-              "loadBalancerBackendAddressPools": "[if(less(range(0, variables('totalNodes'))[copyIndex()], 4), createArray(), if(less(range(0, variables('totalNodes'))[copyIndex()], 7), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbrpcbe'))), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbidxbe')))))]"
+              "loadBalancerBackendAddressPools": "[if(less(range(0, variables('totalNodes'))[copyIndex()], 4), createArray(), if(less(range(0, variables('totalNodes'))[copyIndex()], 6), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbrpcbe'))), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbidxbe')))))]"
             }
           }
         ],
