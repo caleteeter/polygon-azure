@@ -174,11 +174,15 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: (i < 4 ? [] : [
+          loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 7 ? [
             {
               id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
             }
-          ])
+          ] : [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
+            }
+          ]))
         }
       }
     ]
@@ -189,8 +193,21 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
   }
 }]
 
-resource pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
-  name: '${uniqueString(resourceGroup().id)}pip'
+resource pipRpc 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}piprpc'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+resource pipIdx 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}pipidx'
   location: location
   sku: {
     name: 'Standard'
@@ -215,29 +232,57 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
   properties: {
     frontendIPConfigurations: [
       {
-        name: 'lbfe'
+        name: 'lbrpcfe'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: pip.id
+            id: pipRpc.id
+          }
+        }
+      },{
+        name: 'lbidxfe'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: pipIdx.id
           }
         }
       }
     ]
     backendAddressPools: [
       {
-        name: 'lbbe'
+        name: 'lbrpcbe'
+      },
+      {
+        name: 'lbidxbe'
       }
     ]
     loadBalancingRules: [
       {
-        name: 'lbrule'
+        name: 'lbrpcrule'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', loadBalancerName , 'lbfe')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', loadBalancerName , 'lbrpcfe')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbrpcbe')
+          }
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes', loadBalancerName, 'lbprobe')
+          }
+          protocol: 'Tcp'
+          frontendPort: 8545
+          backendPort: 8545
+          idleTimeoutInMinutes: 15
+        }
+      },{
+        name: 'lbidxrule'
+        properties: {
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', loadBalancerName , 'lbidxfe')
+          }
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbidxbe')
           }
           probe: {
             id: resourceId('Microsoft.Network/loadBalancers/probes', loadBalancerName, 'lbprobe')
@@ -329,4 +374,5 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' =
   }
 }]
 
-output publicIpAddress string = pip.properties.ipAddress
+output rpcAddress string = pipRpc.properties.ipAddress
+output idxAddress string = pipIdx.properties.ipAddress
