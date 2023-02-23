@@ -174,7 +174,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 7 ? [
+          loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 6 ? [
             {
               id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbrpcbe')
             }
