@@ -17,11 +17,11 @@ mv polygon-edge /usr/local/bin
 
 # set the total node count to account for additional rpc and idx nodes
 if [[ -n $rpcNodeCount ]]; then
-    totalNodeCount=$((totalNodeCount+rpcNodeCount))     
+    totalNodeCount=$((totalNodeCount + rpcNodeCount))     
 fi
 
 if [[ -n $idxNodeCount ]]; then
-    totalNodeCount=$((totalNodeCount+idxNodeCount))
+    totalNodeCount=$((totalNodeCount + idxNodeCount))
 fi
 
 # generate secrets
