@@ -252,8 +252,7 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
     backendAddressPools: [
       {
         name: 'lbrpcbe'
-      },
-      {
+      },{
         name: 'lbidxbe'
       }
     ]
