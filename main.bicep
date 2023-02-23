@@ -18,6 +18,12 @@ param adminPasswordOrKey string
 @description('Availability zones')
 param availabilityZones string = ''
 
+@description('Number of RPC nodes to provision')
+param rpcNodeCount int = 0
+
+@description('Number of IDX nodes to provision')
+param idxNodeCount int = 0
+
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
 
@@ -93,7 +99,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   }
   
   properties: {
-    arguments: '${managedIdentity.id} ${akv.name}'
+    arguments: '${managedIdentity.id} ${akv.name} ${rpcNodeCount} ${idxNodeCount}'
     forceUpdateTag: '1'
     containerSettings: {
       containerGroupName: '${uniqueString(resourceGroup().id)}ci1'
