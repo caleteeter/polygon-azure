@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.46.61228",
-      "templateHash": "13257085289018161918"
+      "templateHash": "1891273290647559943"
     }
   },
   "parameters": {
@@ -71,6 +71,7 @@
     }
   },
   "variables": {
+    "totalNodes": "[add(add(4, parameters('rpcNodeCount')), parameters('idxNodeCount'))]",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -209,29 +210,25 @@
     {
       "copy": {
         "name": "nic",
-        "count": "[length(range(0, 4))]"
+        "count": "[length(range(0, variables('totalNodes')))]"
       },
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2022-07-01",
-      "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), range(0, 4)[copyIndex()])]",
+      "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[copyIndex()])]",
       "location": "[parameters('location')]",
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
-              "privateIPAddress": "[format('10.1.1.{0}', add(int(range(0, 4)[copyIndex()]), 10))]",
+              "privateIPAddress": "[format('10.1.1.{0}', add(int(range(0, variables('totalNodes'))[copyIndex()]), 10))]",
               "privateIPAllocationMethod": "Static",
               "subnet": {
                 "id": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id))), '2022-07-01').subnets[0].id]"
               },
               "primary": true,
               "privateIPAddressVersion": "IPv4",
-              "loadBalancerBackendAddressPools": [
-                {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbbe')]"
-                }
-              ]
+              "loadBalancerBackendAddressPools": "[if(less(range(0, variables('totalNodes'))[copyIndex()], 4), createArray(), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbbe'))))]"
             }
           }
         ],
@@ -326,11 +323,11 @@
     {
       "copy": {
         "name": "vm",
-        "count": "[length(range(0, 4))]"
+        "count": "[length(range(0, variables('totalNodes')))]"
       },
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2022-11-01",
-      "name": "[format('{0}vm{1}', uniqueString(resourceGroup().id), range(0, 4)[copyIndex()])]",
+      "name": "[format('{0}vm{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[copyIndex()])]",
       "location": "[parameters('location')]",
       "identity": {
         "type": "UserAssigned",
@@ -365,7 +362,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(0, 4)[range(0, 4)[copyIndex()]]))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[range(0, variables('totalNodes'))[copyIndex()]]))]"
             }
           ]
         }
@@ -374,17 +371,17 @@
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deploymentScripts', format('{0}dpy', uniqueString(resourceGroup().id)))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(0, 4)[range(0, 4)[copyIndex()]]))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[range(0, variables('totalNodes'))[copyIndex()]]))]"
       ]
     },
     {
       "copy": {
         "name": "vmExtension",
-        "count": "[length(range(0, 4))]"
+        "count": "[length(range(0, variables('totalNodes')))]"
       },
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "apiVersion": "2022-11-01",
-      "name": "[format('{0}/{1}', format('{0}vm{1}', uniqueString(resourceGroup().id), range(0, 4)[range(0, 4)[copyIndex()]]), format('{0}vmext{1}', uniqueString(resourceGroup().id), range(0, 4)[copyIndex()]))]",
+      "name": "[format('{0}/{1}', format('{0}vm{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[range(0, variables('totalNodes'))[copyIndex()]]), format('{0}vmext{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[copyIndex()]))]",
       "location": "[parameters('location')]",
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
@@ -395,13 +392,13 @@
           "fileUris": [
             "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
           ],
-          "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), range(0, 4)[copyIndex()])]"
+          "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), range(0, variables('totalNodes'))[copyIndex()])]"
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', format('a{0}akv', uniqueString(resourceGroup().id)))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]",
-        "[resourceId('Microsoft.Compute/virtualMachines', format('{0}vm{1}', uniqueString(resourceGroup().id), range(0, 4)[range(0, 4)[copyIndex()]]))]"
+        "[resourceId('Microsoft.Compute/virtualMachines', format('{0}vm{1}', uniqueString(resourceGroup().id), range(0, variables('totalNodes'))[range(0, variables('totalNodes'))[copyIndex()]]))]"
       ]
     }
   ],
