@@ -39,18 +39,18 @@
         ],
         "steps": [
 			{
-				"name": "networkConfig",
-				"label": "Network configuration settings",
+				"name": "validatorConfig",
+				"label": "Validator configuration settings",
 				"elements": [
                     {
                         "name": "vmTextBlock",
                         "type": "Microsoft.Common.TextBlock",
                         "visible": true,
                         "options": {
-                            "text": "A Polygon network will be created consisting of 4 VMs of the size selected here",
+                            "text": "A Polygon network will be created consisting of 4 VMs of the size selected here as validators for the network",
                             "link": {
                                 "label": "Learn more",
-                                "uri": "https://www.microsoft.com"
+                                "uri": "https://wiki.polygon.technology/docs/edge/consensus/poa#adding-a-validator-to-the-validator-set"
                             }
                         }
                     },
@@ -116,7 +116,171 @@
                             ],
                             "required": true
                         },
-                        "visible": "[equals('zones', steps('networkConfig').availabilityOptions)]"
+                        "visible": "[equals('zones', steps('validatorConfig').availabilityOptions)]"
+                    }
+				]
+			},
+            {
+				"name": "rpcConfig",
+				"label": "RPC node configuration settings",
+				"elements": [
+                    {
+                        "name": "vmTextBlock",
+                        "type": "Microsoft.Common.TextBlock",
+                        "visible": true,
+                        "options": {
+                            "text": "A Polygon network will be created consisting of 2 VMs of the size selected here as rpc endpoints for the network",
+                            "link": {
+                                "label": "Learn more",
+                                "uri": "https://wiki.polygon.technology/docs/edge/consensus/poa#adding-a-validator-to-the-validator-set"
+                            }
+                        }
+                    },
+					{
+                        "name": "vmSize",
+                        "type": "Microsoft.Compute.SizeSelector",
+                        "label": "Size",
+                        "toolTip": "",
+                        "recommendedSizes": [
+                            "Standard_D4s_v4"
+                        ],
+                        "options": {
+                            "hideDiskTypeFilter": false
+                        },
+                        "osPlatform": "Linux",
+                        "imageReference": {
+                            "publisher": "Canonical",
+                            "offer": "0001-com-ubuntu-server-focal",
+                            "sku": "20_04-lts-gen2"
+                        },
+                        "count": 2,
+                        "visible": true
+                    },
+                    {
+                        "name": "availabilityOptions",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Availability Options",
+                        "defaultValue": "No infrastructure redundancy required",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "No infrastructure redundancy required",
+                                    "value": "none"
+                                },
+                                {
+                                    "label": "Availability zones",
+                                    "value": "zones"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "availabilityZones",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Availability Zones",
+                        "defaultValue": "Zones 3",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Zones 1",
+                                    "value": "1"
+                                },
+                                {
+                                    "label": "Zones 2",
+                                    "value": "2"
+                                },
+                                {
+                                    "label": "Zones 3",
+                                    "value": "3"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": "[equals('zones', steps('rpcConfig').availabilityOptions)]"
+                    }
+				]
+			},
+            {
+				"name": "indexerConfig",
+				"label": "Indexer configuration settings",
+				"elements": [
+                    {
+                        "name": "vmTextBlock",
+                        "type": "Microsoft.Common.TextBlock",
+                        "visible": true,
+                        "options": {
+                            "text": "A Polygon network will be created consisting of 2 VMs of the size selected here as indexer endpoints for the network",
+                            "link": {
+                                "label": "Learn more",
+                                "uri": "https://wiki.polygon.technology/docs/edge/consensus/poa#adding-a-validator-to-the-validator-set"
+                            }
+                        }
+                    },
+					{
+                        "name": "vmSize",
+                        "type": "Microsoft.Compute.SizeSelector",
+                        "label": "Size",
+                        "toolTip": "",
+                        "recommendedSizes": [
+                            "Standard_D4s_v4"
+                        ],
+                        "options": {
+                            "hideDiskTypeFilter": false
+                        },
+                        "osPlatform": "Linux",
+                        "imageReference": {
+                            "publisher": "Canonical",
+                            "offer": "0001-com-ubuntu-server-focal",
+                            "sku": "20_04-lts-gen2"
+                        },
+                        "count": 2,
+                        "visible": true
+                    },
+                    {
+                        "name": "availabilityOptions",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Availability Options",
+                        "defaultValue": "No infrastructure redundancy required",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "No infrastructure redundancy required",
+                                    "value": "none"
+                                },
+                                {
+                                    "label": "Availability zones",
+                                    "value": "zones"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "availabilityZones",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Availability Zones",
+                        "defaultValue": "Zones 3",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Zones 1",
+                                    "value": "1"
+                                },
+                                {
+                                    "label": "Zones 2",
+                                    "value": "2"
+                                },
+                                {
+                                    "label": "Zones 3",
+                                    "value": "3"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": "[equals('zones', steps('indexerConfig').availabilityOptions)]"
                     }
 				]
 			}
@@ -126,8 +290,12 @@
             "adminUsername": "[basics('adminUsername')]",
             "authenticationType": "[basics('SSHCredentials').authenticationType]",
             "adminPasswordOrKey": "[coalesce(basics('SSHCredentials').password, basics('SSHCredentials').sshPublicKey)]",
-            "vmSize": "[steps('networkConfig').vmSize]",
-            "availabilityZones": "[steps('networkConfig').availabilityZones]"
+            "validatorVmSize": "[steps('validatorConfig').vmSize]",
+            "validatorAvailabilityZones": "[steps('validatorConfig').availabilityZones]",
+            "rpcVmSize": "[steps('rpcConfig').vmSize]",
+            "rpcAvailabilityZones": "[steps('rpcConfig').availabilityZones]",
+            "indexerVmSize": "[steps('indexerConfig').vmSize]",
+            "indexerAvailabilityZones": "[steps('indexerConfig').availabilityZones]"
         }
     }
 }

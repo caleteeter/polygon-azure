@@ -18,8 +18,16 @@ param adminPasswordOrKey string
 @description('Availability zones')
 param availabilityZones string = ''
 
+@description('Number of RPC nodes to provision')
+param rpcNodeCount int = 0
+
+@description('Number of IDX nodes to provision')
+param idxNodeCount int = 0
+
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
+
+var totalNodes = 4 + rpcNodeCount + idxNodeCount
 
 var linuxConfiguration = {
   disablePasswordAuthentication: true
@@ -93,7 +101,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   }
   
   properties: {
-    arguments: '${managedIdentity.id} ${akv.name}'
+    arguments: '${managedIdentity.id} ${akv.name} ${rpcNodeCount} ${idxNodeCount}'
     forceUpdateTag: '1'
     containerSettings: {
       containerGroupName: '${uniqueString(resourceGroup().id)}ci1'
@@ -148,7 +156,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, 4): {
+resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}nic${i}'
   location: location
   dependsOn: [
@@ -166,11 +174,15 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: [
+          loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 6 ? [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbrpcbe')
             }
-          ]
+          ] : [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbidxbe')
+            }
+          ]))
         }
       }
     ]
@@ -181,8 +193,21 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
   }
 }]
 
-resource pip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
-  name: '${uniqueString(resourceGroup().id)}pip'
+resource pipRpc 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}piprpc'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+resource pipIdx 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}pipidx'
   location: location
   sku: {
     name: 'Standard'
@@ -207,29 +232,56 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
   properties: {
     frontendIPConfigurations: [
       {
-        name: 'lbfe'
+        name: 'lbrpcfe'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: pip.id
+            id: pipRpc.id
+          }
+        }
+      },{
+        name: 'lbidxfe'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: pipIdx.id
           }
         }
       }
     ]
     backendAddressPools: [
       {
-        name: 'lbbe'
+        name: 'lbrpcbe'
+      },{
+        name: 'lbidxbe'
       }
     ]
     loadBalancingRules: [
       {
-        name: 'lbrule'
+        name: 'lbrpcrule'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', loadBalancerName , 'lbfe')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', loadBalancerName , 'lbrpcfe')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbrpcbe')
+          }
+          probe: {
+            id: resourceId('Microsoft.Network/loadBalancers/probes', loadBalancerName, 'lbprobe')
+          }
+          protocol: 'Tcp'
+          frontendPort: 8545
+          backendPort: 8545
+          idleTimeoutInMinutes: 15
+        }
+      },{
+        name: 'lbidxrule'
+        properties: {
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', loadBalancerName , 'lbidxfe')
+          }
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbidxbe')
           }
           probe: {
             id: resourceId('Microsoft.Network/loadBalancers/probes', loadBalancerName, 'lbprobe')
@@ -256,7 +308,7 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
 }
 
 
-resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 4): {
+resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}vm${v}'
   location: location
   dependsOn: [
@@ -303,7 +355,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 
   zones: (availabilityZones == '' ? [] : [string(availabilityZones)])
 }]
 
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, 4): {
+resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}vmext${e}'
   location: location
   parent: vm[e]
@@ -321,4 +373,5 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' =
   }
 }]
 
-output publicIpAddress string = pip.properties.ipAddress
+output rpcAddress string = pipRpc.properties.ipAddress
+output idxAddress string = pipIdx.properties.ipAddress

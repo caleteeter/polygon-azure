@@ -1,5 +1,9 @@
 name: bicep-build
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - caleteet-rpc-idx
 jobs: 
   bicep-build:
     name: bicep-build
