@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.46.61228",
-      "templateHash": "1891273290647559943"
+      "templateHash": "17262919449651449136"
     }
   },
   "parameters": {
@@ -228,7 +228,7 @@
               },
               "primary": true,
               "privateIPAddressVersion": "IPv4",
-              "loadBalancerBackendAddressPools": "[if(less(range(0, variables('totalNodes'))[copyIndex()], 4), createArray(), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbbe'))))]"
+              "loadBalancerBackendAddressPools": "[if(less(range(0, variables('totalNodes'))[copyIndex()], 4), createArray(), if(less(range(0, variables('totalNodes'))[copyIndex()], 7), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbbe'))), createArray(createObject('id', resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbbe')))))]"
             }
           }
         ],
@@ -246,7 +246,21 @@
     {
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2022-07-01",
-      "name": "[format('{0}pip', uniqueString(resourceGroup().id))]",
+      "name": "[format('{0}piprpc', uniqueString(resourceGroup().id))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Regional"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2022-07-01",
+      "name": "[format('{0}pipidx', uniqueString(resourceGroup().id))]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard",
@@ -269,29 +283,59 @@
       "properties": {
         "frontendIPConfigurations": [
           {
-            "name": "lbfe",
+            "name": "lbrpcfe",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}pip', uniqueString(resourceGroup().id)))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}piprpc', uniqueString(resourceGroup().id)))]"
+              }
+            }
+          },
+          {
+            "name": "lbidxfe",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}pipidx', uniqueString(resourceGroup().id)))]"
               }
             }
           }
         ],
         "backendAddressPools": [
           {
-            "name": "lbbe"
+            "name": "lbrpcbe"
+          },
+          {
+            "name": "lbidxbe"
           }
         ],
         "loadBalancingRules": [
           {
-            "name": "lbrule",
+            "name": "lbrpcrule",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), 'lbfe')]"
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), 'lbrpcfe')]"
               },
               "backendAddressPool": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbbe')]"
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbrpcbe')]"
+              },
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('loadBalancerName'), 'lbprobe')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 8545,
+              "backendPort": 8545,
+              "idleTimeoutInMinutes": 15
+            }
+          },
+          {
+            "name": "lbidxrule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), 'lbidxfe')]"
+              },
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), 'lbidxbe')]"
               },
               "probe": {
                 "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('loadBalancerName'), 'lbprobe')]"
@@ -316,7 +360,8 @@
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}pip', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}pipidx', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}piprpc', uniqueString(resourceGroup().id)))]",
         "[resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id)))]"
       ]
     },
@@ -403,9 +448,13 @@
     }
   ],
   "outputs": {
-    "publicIpAddress": {
+    "rpcAddress": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}pip', uniqueString(resourceGroup().id))), '2022-07-01').ipAddress]"
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}piprpc', uniqueString(resourceGroup().id))), '2022-07-01').ipAddress]"
+    },
+    "idxAddress": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}pipidx', uniqueString(resourceGroup().id))), '2022-07-01').ipAddress]"
     }
   }
 }
