@@ -27,6 +27,8 @@ param idxNodeCount int = 0
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
 
+var totalNodes = 4 + rpcNodeCount + idxNodeCount
+
 var linuxConfiguration = {
   disablePasswordAuthentication: true
   ssh: {
@@ -154,7 +156,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, 4): {
+resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}nic${i}'
   location: location
   dependsOn: [
@@ -172,11 +174,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: [
+          loadBalancerBackendAddressPools: (i < 4 ? [] : [
             {
               id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbbe')
             }
-          ]
+          ])
         }
       }
     ]
@@ -262,7 +264,7 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
 }
 
 
-resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 4): {
+resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}vm${v}'
   location: location
   dependsOn: [
@@ -309,7 +311,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 
   zones: (availabilityZones == '' ? [] : [string(availabilityZones)])
 }]
 
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, 4): {
+resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}vmext${e}'
   location: location
   parent: vm[e]
