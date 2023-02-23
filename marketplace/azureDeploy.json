@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.46.61228",
-      "templateHash": "6346629765186216215"
+      "templateHash": "13257085289018161918"
     }
   },
   "parameters": {
@@ -45,6 +45,20 @@
       "defaultValue": "",
       "metadata": {
         "description": "Availability zones"
+      }
+    },
+    "rpcNodeCount": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Number of RPC nodes to provision"
+      }
+    },
+    "idxNodeCount": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "Number of IDX nodes to provision"
       }
     },
     "rutcValue": {
@@ -132,7 +146,7 @@
         }
       },
       "properties": {
-        "arguments": "[format('{0} {1}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)))]",
+        "arguments": "[format('{0} {1} {2} {3}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), parameters('rpcNodeCount'), parameters('idxNodeCount'))]",
         "forceUpdateTag": "1",
         "containerSettings": {
           "containerGroupName": "[format('{0}ci1', uniqueString(resourceGroup().id))]"
