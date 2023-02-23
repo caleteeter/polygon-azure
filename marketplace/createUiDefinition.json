@@ -73,6 +73,50 @@
                         },
                         "count": 4,
                         "visible": true
+                    },
+                    {
+                        "name": "availabilityOptions",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Availability Options",
+                        "defaultValue": "No infrastructure redundancy required",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "No infrastructure redundancy required",
+                                    "value": "none"
+                                },
+                                {
+                                    "label": "Availability zones",
+                                    "value": "zones"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "availabilityZones",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Availability Zones",
+                        "defaultValue": "Zones 3",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Zones 1",
+                                    "value": "1"
+                                },
+                                {
+                                    "label": "Zones 2",
+                                    "value": "2"
+                                },
+                                {
+                                    "label": "Zones 3",
+                                    "value": "3"
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": "[equals('zones', steps('networkConfig').availabilityOptions)]"
                     }
 				]
 			}
@@ -82,7 +126,8 @@
             "adminUsername": "[basics('adminUsername')]",
             "authenticationType": "[basics('SSHCredentials').authenticationType]",
             "adminPasswordOrKey": "[coalesce(basics('SSHCredentials').password, basics('SSHCredentials').sshPublicKey)]",
-            "vmSize": "[steps('networkConfig').vmSize]"
+            "vmSize": "[steps('networkConfig').vmSize]",
+            "availabilityZones": "[steps('networkConfig').availabilityZones]"
         }
     }
 }

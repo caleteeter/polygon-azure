@@ -15,6 +15,9 @@ param authenticationType string = 'password'
 @secure()
 param adminPasswordOrKey string
 
+@description('Availability zones')
+param availabilityZones string = ''
+
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
 
@@ -297,6 +300,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 
       ]
     }
   }
+  zones: (availabilityZones == '' ? [] : [string(availabilityZones)])
 }]
 
 resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, 4): {
