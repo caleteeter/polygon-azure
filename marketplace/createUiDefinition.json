@@ -136,6 +136,11 @@
                             }
                         }
                     },
+                    {
+                        "name": "rpcNodes",
+                        "type": "Microsoft.Common.CheckBox",
+                        "label": "Include RPC nodes (2)"
+                    },
 					{
                         "name": "vmSize",
                         "type": "Microsoft.Compute.SizeSelector",
@@ -154,7 +159,7 @@
                             "sku": "20_04-lts-gen2"
                         },
                         "count": 2,
-                        "visible": true
+                        "visible": "[equals(true, steps('rpcConfig').rpcNodes)]"
                     },
                     {
                         "name": "availabilityOptions",
@@ -174,7 +179,7 @@
                             ],
                             "required": true
                         },
-                        "visible": true
+                        "visible": "[equals(true, steps('rpcConfig').rpcNodes)]"
                     },
                     {
                         "name": "availabilityZones",
@@ -218,6 +223,11 @@
                             }
                         }
                     },
+                    {
+                        "name": "idxNodes",
+                        "type": "Microsoft.Common.CheckBox",
+                        "label": "Include Indexer nodes (2)"
+                    },
 					{
                         "name": "vmSize",
                         "type": "Microsoft.Compute.SizeSelector",
@@ -236,7 +246,7 @@
                             "sku": "20_04-lts-gen2"
                         },
                         "count": 2,
-                        "visible": true
+                        "visible": "[equals(true, steps('indexerConfig').idxNodes)]"
                     },
                     {
                         "name": "availabilityOptions",
@@ -256,7 +266,7 @@
                             ],
                             "required": true
                         },
-                        "visible": true
+                        "visible": "[equals(true, steps('indexerConfig').idxNodes)]"
                     },
                     {
                         "name": "availabilityZones",
@@ -292,8 +302,10 @@
             "adminPasswordOrKey": "[coalesce(basics('SSHCredentials').password, basics('SSHCredentials').sshPublicKey)]",
             "validatorVmSize": "[steps('validatorConfig').vmSize]",
             "validatorAvailabilityZones": "[steps('validatorConfig').availabilityZones]",
+            "rpcEnabled": "[steps('rpcConfig').rpcNodes]",
             "rpcVmSize": "[steps('rpcConfig').vmSize]",
             "rpcAvailabilityZones": "[steps('rpcConfig').availabilityZones]",
+            "indexerEnabled": "[steps('indexerConfig').idxNodes]",
             "indexerVmSize": "[steps('indexerConfig').vmSize]",
             "indexerAvailabilityZones": "[steps('indexerConfig').availabilityZones]"
         }
