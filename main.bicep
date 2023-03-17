@@ -15,33 +15,32 @@ param authenticationType string = 'password'
 @secure()
 param adminPasswordOrKey string
 
-@description('Availability zones')
-param availabilityZones string = ''
+@description('Validator VM size')
+param validatorVmSize string = 'Standard_D4s_v4'
 
-@description('Number of RPC nodes to provision')
-param rpcNodeCount int = 0
+@description('Validator VM availability zones')
+param validatorAvailabilityZones string = ''
 
-@description('Number of IDX nodes to provision')
-param idxNodeCount int = 0
+@description('RPC enabled')
+param rpcEnabled bool = false
+
+@description('RPC VM size')
+param rpcVmSize string = 'Standard_D4s_v4'
+
+@description('RPC VM availability zones')
+param rpcAvailabilityZones string = ''
+
+@description('Indexer enabled')
+param indexerEnabled bool = false
+
+@description('Indexer VM size')
+param indexerVmSize string = 'Standard_D4s_v4'
+
+@description('Indexer VM availability zones')
+param indexerAvailabilityZones string = ''
 
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
-
-var totalNodes = 4 + rpcNodeCount + idxNodeCount
-
-var linuxConfiguration = {
-  disablePasswordAuthentication: true
-  ssh: {
-    publicKeys: [
-      {
-        path: '/home/${adminUsername}/.ssh/authorized_keys'
-        keyData: adminPasswordOrKey
-      }
-    ]
-  }
-}
-
-param vmSize string = 'Standard_D4s_v4'
 
 var loadBalancerName = '${uniqueString(resourceGroup().id)}lb'
 
@@ -61,7 +60,7 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleId)
     description: 'akvrole'
-    principalId: '${reference(managedIdentity.id).principalId}'
+    principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -101,7 +100,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   }
   
   properties: {
-    arguments: '${managedIdentity.id} ${akv.name} ${rpcNodeCount} ${idxNodeCount}'
+    arguments: '${managedIdentity.id} ${akv.name} ${(rpcEnabled ? 2 : 0)} ${(indexerEnabled ? 2 : 0)}'
     forceUpdateTag: '1'
     containerSettings: {
       containerGroupName: '${uniqueString(resourceGroup().id)}ci1'
@@ -156,45 +155,8 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}nic${i}'
-  location: location
-  dependsOn: [
-    lb
-  ]
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAddress: '10.1.1.${int(i)+10}'
-          privateIPAllocationMethod: 'Static'
-          subnet: {
-            id: vnet.properties.subnets[0].id
-          }
-          primary: true
-          privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 6 ? [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbrpcbe')
-            }
-          ] : [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbidxbe')
-            }
-          ]))
-        }
-      }
-    ]
-    enableAcceleratedNetworking: true
-    networkSecurityGroup: {
-      id: nsg.id
-    }
-  }
-}]
-
-resource pipRpc 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
-  name: '${uniqueString(resourceGroup().id)}piprpc'
+resource pipIdx 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}pipidx'
   location: location
   sku: {
     name: 'Standard'
@@ -206,8 +168,8 @@ resource pipRpc 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   }
 }
 
-resource pipIdx 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
-  name: '${uniqueString(resourceGroup().id)}pipidx'
+resource pipRpc 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}piprpc'
   location: location
   sku: {
     name: 'Standard'
@@ -307,71 +269,25 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
   }
 }
 
-
-resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}vm${v}'
-  location: location
+module validatorVmModule 'modules/validatorVm.bicep' = {
+  name: 'validatorDeploy'
   dependsOn: [
     deploymentScript
   ]
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentity.id}': {}
-    }
+  params: {
+    location: location
+    vmSize: validatorVmSize
+    adminUsername: adminUsername
+    adminPasswordOrKey: adminPasswordOrKey
+    authenticationType: authenticationType
+    akvName: akv.name
+    managedIdentity: managedIdentity.id
+    nsg: nsg.id
+    subnetId: vnet.properties.subnets[0].id
+    totalNodes: 4
+    availabilityZones: validatorAvailabilityZones
   }
-  properties: {
-    hardwareProfile: {
-      vmSize: vmSize
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-focal'
-        sku: '20_04-lts-gen2'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-        managedDisk: {
-          storageAccountType: 'Premium_LRS'
-        }
-      }
-    }
-    osProfile: {
-      computerName: '${uniqueString(resourceGroup().id)}vm'
-      adminUsername: adminUsername
-      adminPassword: adminPasswordOrKey
-      linuxConfiguration: ((authenticationType == 'password') ? null : linuxConfiguration)
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic[v].id
-        }
-      ]
-    }
-  }
-  zones: (availabilityZones == '' ? [] : [string(availabilityZones)])
-}]
+}
 
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}vmext${e}'
-  location: location
-  parent: vm[e]
-  properties: {
-    publisher: 'Microsoft.Azure.Extensions'
-    type: 'CustomScript'
-    typeHandlerVersion: '2.0'
-    autoUpgradeMinorVersion: true
-    settings: {
-      fileUris: [
-        'https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh'
-      ]
-      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity.id} ${akv.name} ${e}'
-    }
-  }
-}]
-
-output rpcAddress string = pipRpc.properties.ipAddress
-output idxAddress string = pipIdx.properties.ipAddress
+// output rpcAddress string = pipRpc.properties.ipAddress
+// output idxAddress string = pipIdx.properties.ipAddress

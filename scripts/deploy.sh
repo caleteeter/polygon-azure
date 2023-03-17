@@ -25,14 +25,14 @@ if [[ -n $idxNodeCount ]]; then
 fi
 
 # generate secrets
-for i in $( eval echo {0..$totalNodeCount} )
+for i in $(eval echo {0..$((totalNodeCount - 1))} )
 do
     mkdir data$i
     polygon-edge secrets init --data-dir data$i
-    tar -czvf data$1.tar.gz data$i
-    base64 data0.tar.gz > node$i
+    tar -czvf data$i.tar.gz data$i
+    base64 data$i.tar.gz > node$i
     az keyvault secret set --vault-name $vaultName --name node$i --file node$i
-    echo "/ip4/10.1.1.10/tcp/1478/p2p/$(polygon-edge secrets output --node-id --data-dir data$i)" > nodeid$i
+    echo "/ip4/10.1.1.1$i/tcp/1478/p2p/$(polygon-edge secrets output --node-id --data-dir data$i)" > nodeid$i
     az keyvault secret set --vault-name $vaultName --name nodeid$i --file nodeid$i
 done
 
