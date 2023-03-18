@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.15.31.15270",
-      "templateHash": "14040117419952703703"
+      "templateHash": "7962463477359146602"
     }
   },
   "parameters": {
@@ -665,7 +665,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.15.31.15270",
-              "templateHash": "3381672632943557958"
+              "templateHash": "8867265003015496410"
             }
           },
           "parameters": {
@@ -787,7 +787,12 @@
                         "id": "[parameters('subnetId')]"
                       },
                       "primary": true,
-                      "privateIPAddressVersion": "IPv4"
+                      "privateIPAddressVersion": "IPv4",
+                      "loadBalancerBackendAddressPools": [
+                        {
+                          "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancerName'), parameters('loadBalancerBackendName'))]"
+                        }
+                      ]
                     }
                   }
                 ],
@@ -873,6 +878,289 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines', format('{0}vm{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 4)))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', format('a{0}akv', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Resources/deploymentScripts', format('{0}dpy', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}nsg', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "idxDeploy",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vmSize": {
+            "value": "[parameters('indexerVmSize')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPasswordOrKey": {
+            "value": "[parameters('adminPasswordOrKey')]"
+          },
+          "authenticationType": {
+            "value": "[parameters('authenticationType')]"
+          },
+          "akvName": {
+            "value": "[format('a{0}akv', uniqueString(resourceGroup().id))]"
+          },
+          "managedIdentity": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]"
+          },
+          "nsg": {
+            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}nsg', uniqueString(resourceGroup().id)))]"
+          },
+          "subnetId": {
+            "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id))), '2022-07-01').subnets[0].id]"
+          },
+          "totalNodes": {
+            "value": 2
+          },
+          "availabilityZones": {
+            "value": "[parameters('indexerAvailabilityZones')]"
+          },
+          "loadBalancerName": {
+            "value": "[variables('loadBalancerName')]"
+          },
+          "loadBalancerBackendName": {
+            "value": "lbidxbe"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.15.31.15270",
+              "templateHash": "6581920816008826713"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region that will be targeted for resources."
+              }
+            },
+            "akvName": {
+              "type": "string",
+              "metadata": {
+                "description": "AKV name"
+              }
+            },
+            "subnetId": {
+              "type": "string",
+              "metadata": {
+                "description": "Subnet id"
+              }
+            },
+            "loadBalancerName": {
+              "type": "string",
+              "metadata": {
+                "description": "Load balancer name"
+              }
+            },
+            "loadBalancerBackendName": {
+              "type": "string",
+              "metadata": {
+                "description": "Load balancer backend name"
+              }
+            },
+            "nsg": {
+              "type": "string",
+              "metadata": {
+                "description": "Network security group id"
+              }
+            },
+            "managedIdentity": {
+              "type": "string",
+              "metadata": {
+                "description": "The identity used by the VM"
+              }
+            },
+            "vmSize": {
+              "type": "string",
+              "metadata": {
+                "description": "The size of the virtual machine"
+              }
+            },
+            "adminUsername": {
+              "type": "string",
+              "metadata": {
+                "description": "Username for the VM"
+              }
+            },
+            "authenticationType": {
+              "type": "string",
+              "allowedValues": [
+                "sshPublicKey",
+                "password"
+              ],
+              "metadata": {
+                "description": "Type of authentication to use for the VM"
+              }
+            },
+            "adminPasswordOrKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "SSH key or password for the VM"
+              }
+            },
+            "availabilityZones": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Validator VM availability zones"
+              }
+            },
+            "totalNodes": {
+              "type": "int",
+              "metadata": {
+                "description": "Total nodes"
+              }
+            }
+          },
+          "variables": {
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": true,
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+                    "keyData": "[parameters('adminPasswordOrKey')]"
+                  }
+                ]
+              }
+            }
+          },
+          "resources": [
+            {
+              "copy": {
+                "name": "nic",
+                "count": "[length(range(6, parameters('totalNodes')))]"
+              },
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[copyIndex()])]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(6, parameters('totalNodes'))[copyIndex()]), 10))]",
+                      "privateIPAllocationMethod": "Static",
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      },
+                      "primary": true,
+                      "privateIPAddressVersion": "IPv4",
+                      "loadBalancerBackendAddressPools": [
+                        {
+                          "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancerName'), parameters('loadBalancerBackendName'))]"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "enableAcceleratedNetworking": true,
+                "networkSecurityGroup": {
+                  "id": "[parameters('nsg')]"
+                }
+              }
+            },
+            {
+              "copy": {
+                "name": "vm",
+                "count": "[length(range(0, parameters('totalNodes')))]"
+              },
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2022-11-01",
+              "name": "[format('{0}vm{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 6))]",
+              "location": "[parameters('location')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('managedIdentity'))]": {}
+                }
+              },
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "0001-com-ubuntu-server-focal",
+                    "sku": "20_04-lts-gen2",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage",
+                    "managedDisk": {
+                      "storageAccountType": "Premium_LRS"
+                    }
+                  }
+                },
+                "osProfile": {
+                  "computerName": "[format('{0}vm', uniqueString(resourceGroup().id))]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPasswordOrKey')]",
+                  "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), null(), variables('linuxConfiguration'))]"
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]"
+                    }
+                  ]
+                }
+              },
+              "zones": "[if(equals(parameters('availabilityZones'), ''), createArray(), createArray(string(parameters('availabilityZones'))))]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]"
+              ]
+            },
+            {
+              "copy": {
+                "name": "vmExtension",
+                "count": "[length(range(0, parameters('totalNodes')))]"
+              },
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2022-11-01",
+              "name": "[format('{0}/{1}', format('{0}vm{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 6)), format('{0}vmext{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 6)))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                  "fileUris": [
+                    "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
+                  ],
+                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', parameters('managedIdentity'), parameters('akvName'), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 6))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', format('{0}vm{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 6)))]"
               ]
             }
           ]
