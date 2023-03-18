@@ -17,7 +17,7 @@ param loadBalancerBackendName string
 param nsg string
 
 @description('The identity used by the VM')
-param managedIdentity object
+param managedIdentity string
 
 @description('The size of the virtual machine')
 param vmSize string
@@ -54,7 +54,7 @@ var linuxConfiguration = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, totalNodes): {
+resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(4, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}nic${i}'
   location: location
   properties: {
@@ -65,36 +65,35 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           privateIPAddress: '10.1.1.${int(i)+10}'
           privateIPAllocationMethod: 'Static'
           subnet: {
-            id: subnetId // vnet.properties.subnets[0].id
+            id: subnetId 
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: (i < 4 ? [] : (i < 6 ? [
+          loadBalancerBackendAddressPools: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, loadBalancerBackendName) // 'lbrpcbe')
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, loadBalancerBackendName)
             }
-          ] : [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, 'lbidxbe')
-            }
-          ]))
+          ]
         }
       }
     ]
     enableAcceleratedNetworking: true
     networkSecurityGroup: {
-      id: nsg //.id
+      id: nsg
     }
   }
 }]
 
 resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}vm${v}'
+  name: '${uniqueString(resourceGroup().id)}vm${int(v)+4}'
   location: location
+  dependsOn: [
+    nic[v]
+  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentity.id}': {}
+      '${managedIdentity}': {}
     }
   }
   properties: {
@@ -133,7 +132,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 
 }]
 
 resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}vmext${e}'
+  name: '${uniqueString(resourceGroup().id)}vmext${int(e)+4}'
   location: location
   parent: vm[e]
   properties: {
@@ -145,7 +144,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' =
       fileUris: [
         'https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh'
       ]
-      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity.id} ${akvName} ${e}'
+      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity} ${akvName} ${int(e)+4}'
     }
   }
 }]

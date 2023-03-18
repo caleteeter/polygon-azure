@@ -289,5 +289,49 @@ module validatorVmModule 'modules/validatorVm.bicep' = {
   }
 }
 
+module rpcVmModule 'modules/rpcVm.bicep' = {
+  name: 'rpcDeploy'
+  dependsOn: [
+    deploymentScript
+  ]
+  params: {
+    location: location
+    vmSize: rpcVmSize
+    adminUsername: adminUsername
+    adminPasswordOrKey: adminPasswordOrKey
+    authenticationType: authenticationType
+    akvName: akv.name
+    managedIdentity: managedIdentity.id
+    nsg: nsg.id
+    subnetId: vnet.properties.subnets[0].id
+    totalNodes: 2
+    availabilityZones: rpcAvailabilityZones
+    loadBalancerName: loadBalancerName
+    loadBalancerBackendName: 'lbrpcbe'
+  }
+}
+
+module idxVmModule 'modules/idxVm.bicep' = {
+  name: 'idxDeploy'
+  dependsOn: [
+    deploymentScript
+  ]
+  params: {
+    location: location
+    vmSize: indexerVmSize
+    adminUsername: adminUsername
+    adminPasswordOrKey: adminPasswordOrKey
+    authenticationType: authenticationType
+    akvName: akv.name
+    managedIdentity: managedIdentity.id
+    nsg: nsg.id
+    subnetId: vnet.properties.subnets[0].id
+    totalNodes: 2
+    availabilityZones: indexerAvailabilityZones
+    loadBalancerName: loadBalancerName
+    loadBalancerBackendName: 'lbidxbe'
+  }
+}
+
 // output rpcAddress string = pipRpc.properties.ipAddress
 // output idxAddress string = pipIdx.properties.ipAddress
