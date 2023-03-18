@@ -289,7 +289,7 @@ module validatorVmModule 'modules/validatorVm.bicep' = {
   }
 }
 
-module rpcVmNicModule 'modules/rpcVm.bicep' = {
+module rpcVmModule 'modules/rpcVm.bicep' = {
   name: 'rpcDeploy'
   dependsOn: [
     deploymentScript
@@ -308,6 +308,28 @@ module rpcVmNicModule 'modules/rpcVm.bicep' = {
     availabilityZones: rpcAvailabilityZones
     loadBalancerName: loadBalancerName
     loadBalancerBackendName: 'lbrpcbe'
+  }
+}
+
+module idxVmModule 'modules/idxVm.bicep' = {
+  name: 'idxDeploy'
+  dependsOn: [
+    deploymentScript
+  ]
+  params: {
+    location: location
+    vmSize: indexerVmSize
+    adminUsername: adminUsername
+    adminPasswordOrKey: adminPasswordOrKey
+    authenticationType: authenticationType
+    akvName: akv.name
+    managedIdentity: managedIdentity.id
+    nsg: nsg.id
+    subnetId: vnet.properties.subnets[0].id
+    totalNodes: 2
+    availabilityZones: indexerAvailabilityZones
+    loadBalancerName: loadBalancerName
+    loadBalancerBackendName: 'lbidxbe'
   }
 }
 

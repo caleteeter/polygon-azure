@@ -69,6 +69,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
+          loadBalancerBackendAddressPools: [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, loadBalancerBackendName)
+            }
+          ]
         }
       }
     ]
