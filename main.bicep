@@ -15,6 +15,9 @@ param authenticationType string = 'password'
 @secure()
 param adminPasswordOrKey string
 
+@description('Dev VM size')
+param devVmSize string = 'Standard_D4s_v4'
+
 @description('Validator VM size')
 param validatorVmSize string = 'Standard_D4s_v4'
 
@@ -41,6 +44,8 @@ param indexerAvailabilityZones string = ''
 
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
+
+var polygonVersion = '0.8.1'
 
 var loadBalancerName = '${uniqueString(resourceGroup().id)}lb'
 
@@ -100,7 +105,7 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   }
   
   properties: {
-    arguments: '${managedIdentity.id} ${akv.name} ${(rpcEnabled ? 2 : 0)} ${(indexerEnabled ? 2 : 0)}'
+    arguments: '${managedIdentity.id} ${akv.name} ${(rpcEnabled ? 2 : 0)} ${(indexerEnabled ? 2 : 0)} ${polygonVersion}'
     forceUpdateTag: '1'
     containerSettings: {
       containerGroupName: '${uniqueString(resourceGroup().id)}ci1'
@@ -269,10 +274,31 @@ resource lb 'Microsoft.Network/loadBalancers@2022-07-01' = {
   }
 }
 
+module devVmModule 'modules/devVm.bicep' = {
+  name: 'devDeploy'
+  dependsOn: [
+    deploymentScript
+  ]
+  params: {
+    location: location
+    vmSize: devVmSize
+    adminUsername: adminUsername
+    adminPasswordOrKey: adminPasswordOrKey
+    authenticationType: authenticationType
+    akvName: akv.name
+    managedIdentity: managedIdentity.id
+    nsg: nsg.id
+    subnetId: vnet.properties.subnets[0].id
+    totalNodes: 4
+    polygonVersion: polygonVersion
+  }
+}
+
 module validatorVmModule 'modules/validatorVm.bicep' = {
   name: 'validatorDeploy'
   dependsOn: [
     deploymentScript
+    devVmModule
   ]
   params: {
     location: location
@@ -286,6 +312,7 @@ module validatorVmModule 'modules/validatorVm.bicep' = {
     subnetId: vnet.properties.subnets[0].id
     totalNodes: 4
     availabilityZones: validatorAvailabilityZones
+    polygonVersion: polygonVersion
   }
 }
 
@@ -308,6 +335,7 @@ module rpcVmModule 'modules/rpcVm.bicep' = {
     availabilityZones: rpcAvailabilityZones
     loadBalancerName: loadBalancerName
     loadBalancerBackendName: 'lbrpcbe'
+    polygonVersion: polygonVersion
   }
 }
 
@@ -330,6 +358,7 @@ module idxVmModule 'modules/idxVm.bicep' = {
     availabilityZones: indexerAvailabilityZones
     loadBalancerName: loadBalancerName
     loadBalancerBackendName: 'lbidxbe'
+    polygonVersion: polygonVersion
   }
 }
 

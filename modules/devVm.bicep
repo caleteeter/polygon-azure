@@ -1,17 +1,8 @@
 @description('Azure region that will be targeted for resources.')
 param location string
 
-@description('AKV name')
-param akvName string
-
 @description('Subnet id')
 param subnetId string
-
-@description('Load balancer name')
-param loadBalancerName string
-
-@description('Load balancer backend name')
-param loadBalancerBackendName string
 
 @description('Network security group id')
 param nsg string
@@ -36,8 +27,8 @@ param authenticationType string
 @secure()
 param adminPasswordOrKey string
 
-@description('Validator VM availability zones')
-param availabilityZones string = ''
+@description('AKV name')
+param akvName string
 
 @description('Total nodes')
 param totalNodes int
@@ -57,26 +48,21 @@ var linuxConfiguration = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(4, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}nic${i}'
+resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = {
+  name: '${uniqueString(resourceGroup().id)}nic50'
   location: location
   properties: {
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAddress: '10.1.1.${int(i)+10}'
+          privateIPAddress: '10.1.1.50'
           privateIPAllocationMethod: 'Static'
           subnet: {
             id: subnetId 
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, loadBalancerBackendName)
-            }
-          ]
         }
       }
     ]
@@ -85,14 +71,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
       id: nsg
     }
   }
-}]
+}
 
-resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}vm${int(v)+4}'
+resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = {
+  name: '${uniqueString(resourceGroup().id)}vm50'
   location: location
-  dependsOn: [
-    nic[v]
-  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -126,18 +109,17 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, 
     networkProfile: {
       networkInterfaces: [
         {
-          id: nic[v].id
+          id: nic.id
         }
       ]
     }
   }
-  zones: (availabilityZones == '' ? [] : [string(availabilityZones)])
-}]
+}
 
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}vmext${int(e)+4}'
+resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = {
+  name: '${uniqueString(resourceGroup().id)}vmext50'
   location: location
-  parent: vm[e]
+  parent: vm
   properties: {
     publisher: 'Microsoft.Azure.Extensions'
     type: 'CustomScript'
@@ -145,9 +127,9 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' =
     autoUpgradeMinorVersion: true
     settings: {
       fileUris: [
-        'https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh'
+        'https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/devDeploy.sh'
       ]
-      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity} ${akvName} ${int(e)+4} ${polygonVersion}'
+      commandToExecute: '/bin/bash devDeploy.sh ${managedIdentity} ${akvName} ${totalNodes} ${polygonVersion}'
     }
   }
-}]
+}

@@ -42,6 +42,9 @@ param availabilityZones string = ''
 @description('Total nodes')
 param totalNodes int
 
+@description('Polygon version number')
+param polygonVersion string
+
 var linuxConfiguration = {
   disablePasswordAuthentication: true
   ssh: {
@@ -144,7 +147,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' =
       fileUris: [
         'https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh'
       ]
-      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity} ${akvName} ${int(e)+6}'
+      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity} ${akvName} ${int(e)+6} ${polygonVersion}'
     }
   }
 }]
