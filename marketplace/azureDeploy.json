@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.15.31.15270",
-      "templateHash": "7962463477359146602"
+      "templateHash": "14678310208739411865"
     }
   },
   "parameters": {
@@ -38,6 +38,13 @@
       "type": "securestring",
       "metadata": {
         "description": "SSH key or password for the VM"
+      }
+    },
+    "devVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D4s_v4",
+      "metadata": {
+        "description": "Dev VM size"
       }
     },
     "validatorVmSize": {
@@ -102,6 +109,7 @@
     }
   },
   "variables": {
+    "polygonVersion": "0.8.1",
     "loadBalancerName": "[format('{0}lb', uniqueString(resourceGroup().id))]",
     "roleId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
   },
@@ -166,7 +174,7 @@
         }
       },
       "properties": {
-        "arguments": "[format('{0} {1} {2} {3}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), if(parameters('rpcEnabled'), 2, 0), if(parameters('indexerEnabled'), 2, 0))]",
+        "arguments": "[format('{0} {1} {2} {3} {4}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id))), format('a{0}akv', uniqueString(resourceGroup().id)), if(parameters('rpcEnabled'), 2, 0), if(parameters('indexerEnabled'), 2, 0), variables('polygonVersion'))]",
         "forceUpdateTag": "1",
         "containerSettings": {
           "containerGroupName": "[format('{0}ci1', uniqueString(resourceGroup().id))]"
@@ -351,6 +359,251 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
+      "name": "devDeploy",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vmSize": {
+            "value": "[parameters('devVmSize')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPasswordOrKey": {
+            "value": "[parameters('adminPasswordOrKey')]"
+          },
+          "authenticationType": {
+            "value": "[parameters('authenticationType')]"
+          },
+          "akvName": {
+            "value": "[format('a{0}akv', uniqueString(resourceGroup().id))]"
+          },
+          "managedIdentity": {
+            "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]"
+          },
+          "nsg": {
+            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}nsg', uniqueString(resourceGroup().id)))]"
+          },
+          "subnetId": {
+            "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id))), '2022-07-01').subnets[0].id]"
+          },
+          "totalNodes": {
+            "value": 4
+          },
+          "polygonVersion": {
+            "value": "[variables('polygonVersion')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.15.31.15270",
+              "templateHash": "11008418680211448333"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region that will be targeted for resources."
+              }
+            },
+            "subnetId": {
+              "type": "string",
+              "metadata": {
+                "description": "Subnet id"
+              }
+            },
+            "nsg": {
+              "type": "string",
+              "metadata": {
+                "description": "Network security group id"
+              }
+            },
+            "managedIdentity": {
+              "type": "string",
+              "metadata": {
+                "description": "The identity used by the VM"
+              }
+            },
+            "vmSize": {
+              "type": "string",
+              "metadata": {
+                "description": "The size of the virtual machine"
+              }
+            },
+            "adminUsername": {
+              "type": "string",
+              "metadata": {
+                "description": "Username for the VM"
+              }
+            },
+            "authenticationType": {
+              "type": "string",
+              "allowedValues": [
+                "sshPublicKey",
+                "password"
+              ],
+              "metadata": {
+                "description": "Type of authentication to use for the VM"
+              }
+            },
+            "adminPasswordOrKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "SSH key or password for the VM"
+              }
+            },
+            "akvName": {
+              "type": "string",
+              "metadata": {
+                "description": "AKV name"
+              }
+            },
+            "totalNodes": {
+              "type": "int",
+              "metadata": {
+                "description": "Total nodes"
+              }
+            },
+            "polygonVersion": {
+              "type": "string",
+              "metadata": {
+                "description": "Polygon version number"
+              }
+            }
+          },
+          "variables": {
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": true,
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('adminUsername'))]",
+                    "keyData": "[parameters('adminPasswordOrKey')]"
+                  }
+                ]
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2022-07-01",
+              "name": "[format('{0}nic50', uniqueString(resourceGroup().id))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAddress": "10.1.1.50",
+                      "privateIPAllocationMethod": "Static",
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      },
+                      "primary": true,
+                      "privateIPAddressVersion": "IPv4"
+                    }
+                  }
+                ],
+                "enableAcceleratedNetworking": true,
+                "networkSecurityGroup": {
+                  "id": "[parameters('nsg')]"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2022-11-01",
+              "name": "[format('{0}vm50', uniqueString(resourceGroup().id))]",
+              "location": "[parameters('location')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', parameters('managedIdentity'))]": {}
+                }
+              },
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "0001-com-ubuntu-server-focal",
+                    "sku": "20_04-lts-gen2",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage",
+                    "managedDisk": {
+                      "storageAccountType": "Premium_LRS"
+                    }
+                  }
+                },
+                "osProfile": {
+                  "computerName": "[format('{0}vm', uniqueString(resourceGroup().id))]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPasswordOrKey')]",
+                  "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), null(), variables('linuxConfiguration'))]"
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic50', uniqueString(resourceGroup().id)))]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic50', uniqueString(resourceGroup().id)))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2022-11-01",
+              "name": "[format('{0}/{1}', format('{0}vm50', uniqueString(resourceGroup().id)), format('{0}vmext50', uniqueString(resourceGroup().id)))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                  "fileUris": [
+                    "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/devDeploy.sh"
+                  ],
+                  "commandToExecute": "[format('/bin/bash devDeploy.sh {0} {1} {2} {3}', parameters('managedIdentity'), parameters('akvName'), parameters('totalNodes'), parameters('polygonVersion'))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', format('{0}vm50', uniqueString(resourceGroup().id)))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', format('a{0}akv', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Resources/deploymentScripts', format('{0}dpy', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}nsg', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
       "name": "validatorDeploy",
       "properties": {
         "expressionEvaluationOptions": {
@@ -390,6 +643,9 @@
           },
           "availabilityZones": {
             "value": "[parameters('validatorAvailabilityZones')]"
+          },
+          "polygonVersion": {
+            "value": "[variables('polygonVersion')]"
           }
         },
         "template": {
@@ -399,7 +655,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.15.31.15270",
-              "templateHash": "5685963465775599501"
+              "templateHash": "3717449017972454022"
             }
           },
           "parameters": {
@@ -472,6 +728,12 @@
               "type": "int",
               "metadata": {
                 "description": "Total nodes"
+              }
+            },
+            "polygonVersion": {
+              "type": "string",
+              "metadata": {
+                "description": "Polygon version number"
               }
             }
           },
@@ -590,7 +852,7 @@
                   "fileUris": [
                     "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
                   ],
-                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', parameters('managedIdentity'), parameters('akvName'), range(0, parameters('totalNodes'))[copyIndex()])]"
+                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2} {3}', parameters('managedIdentity'), parameters('akvName'), range(0, parameters('totalNodes'))[copyIndex()], parameters('polygonVersion'))]"
                 }
               },
               "dependsOn": [
@@ -603,6 +865,7 @@
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', format('a{0}akv', uniqueString(resourceGroup().id)))]",
         "[resourceId('Microsoft.Resources/deploymentScripts', format('{0}dpy', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Resources/deployments', 'devDeploy')]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}mi', uniqueString(resourceGroup().id)))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}nsg', uniqueString(resourceGroup().id)))]",
         "[resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id)))]"
@@ -656,6 +919,9 @@
           },
           "loadBalancerBackendName": {
             "value": "lbrpcbe"
+          },
+          "polygonVersion": {
+            "value": "[variables('polygonVersion')]"
           }
         },
         "template": {
@@ -665,7 +931,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.15.31.15270",
-              "templateHash": "8867265003015496410"
+              "templateHash": "5174866892461480918"
             }
           },
           "parameters": {
@@ -750,6 +1016,12 @@
               "type": "int",
               "metadata": {
                 "description": "Total nodes"
+              }
+            },
+            "polygonVersion": {
+              "type": "string",
+              "metadata": {
+                "description": "Polygon version number"
               }
             }
           },
@@ -873,7 +1145,7 @@
                   "fileUris": [
                     "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
                   ],
-                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', parameters('managedIdentity'), parameters('akvName'), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 4))]"
+                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2} {3}', parameters('managedIdentity'), parameters('akvName'), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 4), parameters('polygonVersion'))]"
                 }
               },
               "dependsOn": [
@@ -939,6 +1211,9 @@
           },
           "loadBalancerBackendName": {
             "value": "lbidxbe"
+          },
+          "polygonVersion": {
+            "value": "[variables('polygonVersion')]"
           }
         },
         "template": {
@@ -948,7 +1223,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.15.31.15270",
-              "templateHash": "6581920816008826713"
+              "templateHash": "7718637968579645288"
             }
           },
           "parameters": {
@@ -1033,6 +1308,12 @@
               "type": "int",
               "metadata": {
                 "description": "Total nodes"
+              }
+            },
+            "polygonVersion": {
+              "type": "string",
+              "metadata": {
+                "description": "Polygon version number"
               }
             }
           },
@@ -1156,7 +1437,7 @@
                   "fileUris": [
                     "https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh"
                   ],
-                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2}', parameters('managedIdentity'), parameters('akvName'), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 6))]"
+                  "commandToExecute": "[format('/bin/bash clientDeploy.sh {0} {1} {2} {3}', parameters('managedIdentity'), parameters('akvName'), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 6), parameters('polygonVersion'))]"
                 }
               },
               "dependsOn": [
