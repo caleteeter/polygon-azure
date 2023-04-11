@@ -18,7 +18,10 @@ mv polygon-edge /usr/local/bin
 
 # get the keys/node info 
 az keyvault secret download --vault-name ${vaultName} --file node${nodeId} --name node${nodeId}
-az keyvault secret download --vault-name ${vaultName} --file genesis.json --name genesis
+az keyvault secret download --vault-name ${vaultName} --file genesis.tar.gz --name genesis
+
+# uncompress the genesis.json
+tar xvfz genesis.tar.gz
 
 # extract data 
 base64 -d node${nodeId} > data.tar.gz
