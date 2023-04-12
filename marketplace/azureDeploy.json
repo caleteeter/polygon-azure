@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.15.31.15270",
-      "templateHash": "14678310208739411865"
+      "version": "0.16.1.55165",
+      "templateHash": "15890080630011577207"
     }
   },
   "parameters": {
@@ -358,7 +358,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
+      "apiVersion": "2022-09-01",
       "name": "devDeploy",
       "properties": {
         "expressionEvaluationOptions": {
@@ -406,8 +406,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.15.31.15270",
-              "templateHash": "11008418680211448333"
+              "version": "0.16.1.55165",
+              "templateHash": "15288605691885772389"
             }
           },
           "parameters": {
@@ -603,7 +603,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
+      "apiVersion": "2022-09-01",
       "name": "validatorDeploy",
       "properties": {
         "expressionEvaluationOptions": {
@@ -654,8 +654,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.15.31.15270",
-              "templateHash": "3717449017972454022"
+              "version": "0.16.1.55165",
+              "templateHash": "2686056594838152234"
             }
           },
           "parameters": {
@@ -872,8 +872,9 @@
       ]
     },
     {
+      "condition": "[parameters('rpcEnabled')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
+      "apiVersion": "2022-09-01",
       "name": "rpcDeploy",
       "properties": {
         "expressionEvaluationOptions": {
@@ -930,8 +931,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.15.31.15270",
-              "templateHash": "5174866892461480918"
+              "version": "0.16.1.55165",
+              "templateHash": "5685942002421591589"
             }
           },
           "parameters": {
@@ -1164,8 +1165,9 @@
       ]
     },
     {
+      "condition": "[parameters('indexerEnabled')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
+      "apiVersion": "2022-09-01",
       "name": "idxDeploy",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1222,8 +1224,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.15.31.15270",
-              "templateHash": "7718637968579645288"
+              "version": "0.16.1.55165",
+              "templateHash": "748493996621990122"
             }
           },
           "parameters": {
