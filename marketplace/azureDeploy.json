@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.15.31.15270",
-      "templateHash": "2289738300101121719"
+      "templateHash": "11927706845219058518"
     }
   },
   "parameters": {
@@ -639,7 +639,7 @@
             "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', format('{0}vnet', uniqueString(resourceGroup().id))), '2022-07-01').subnets[0].id]"
           },
           "totalNodes": {
-            "value": 5
+            "value": 4
           },
           "availabilityZones": {
             "value": "[parameters('validatorAvailabilityZones')]"
