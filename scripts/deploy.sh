@@ -32,7 +32,7 @@ fi
 polygon-edge polybft-secrets --insecure --data-dir data --num $totalNodeCount
 
 # generate secrets
-for i in $(eval echo {0..$totalNodeCount} )
+for i in $(eval echo {1..$totalNodeCount} )
 do
     tar -czvf data$i.tar.gz data$i
     base64 data$i.tar.gz > node$i
