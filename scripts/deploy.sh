@@ -43,11 +43,6 @@ done
 
 # generate genesis configuration (only validator nodes are added as validators)
 polygon-edge manifest --validators "/ip4/10.1.1.11/tcp/30301/p2p/$(polygon-edge polybft-secrets --insecure --output --data-dir data1 --json | jq -r .[0].node_id)":$(polygon-edge polybft-secrets --insecure --output --data-dir data1 --json | jq -r .[0].address):$(polygon-edge polybft-secrets --insecure --output --data-dir data1 --json | jq -r .[0].bls_pubkey):$(polygon-edge polybft-secrets --insecure --output --data-dir data1 --json | jq -r .[0].bls_signature) --validators "/ip4/10.1.1.12/tcp/30301/p2p/$(polygon-edge polybft-secrets --insecure --output --data-dir data2 --json | jq -r .[0].node_id)":$(polygon-edge polybft-secrets --insecure --output --data-dir data2 --json | jq -r .[0].address):$(polygon-edge polybft-secrets --insecure --output --data-dir data2 --json | jq -r .[0].bls_pubkey):$(polygon-edge polybft-secrets --insecure --output --data-dir data2 --json | jq -r .[0].bls_signature) --validators "/ip4/10.1.1.13/tcp/30301/p2p/$(polygon-edge polybft-secrets --insecure --output --data-dir data3 --json | jq -r .[0].node_id)":$(polygon-edge polybft-secrets --insecure --output --data-dir data3 --json | jq -r .[0].address):$(polygon-edge polybft-secrets --insecure --output --data-dir data3 --json | jq -r .[0].bls_pubkey):$(polygon-edge polybft-secrets --insecure --output --data-dir data3 --json | jq -r .[0].bls_signature) --validators "/ip4/10.1.1.14/tcp/30301/p2p/$(polygon-edge polybft-secrets --insecure --output --data-dir data4 --json | jq -r .[0].node_id)":$(polygon-edge polybft-secrets --insecure --output --data-dir data4 --json | jq -r .[0].address):$(polygon-edge polybft-secrets --insecure --output --data-dir data4 --json | jq -r .[0].bls_pubkey):$(polygon-edge polybft-secrets --insecure --output --data-dir data4 --json | jq -r .[0].bls_signature) --path ./manifest.json --premine-validators 100
-polygon-edge genesis --block-gas-limit 10000000 --epoch-size 10 --consensus polybft --bridge-json-rpc http://10.1.1.50:8545
-
-# add the genesis file to the vault
-tar -czvf genesis.tar.gz genesis.json
-az keyvault secret set --vault-name $vaultName --name genesis --file genesis.tar.gz
 
 # add the manifest file to the vault
 az keyvault secret set --vault-name $vaultName --name manifest --file manifest.json

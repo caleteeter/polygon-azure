@@ -16,6 +16,15 @@ wget -O polygon.tar.gz https://github.com/0xPolygon/polygon-edge/releases/downlo
 tar xvfz polygon.tar.gz
 mv polygon-edge /usr/local/bin
 
+# install docker
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL --max-time 10 --retry 3 --retry-delay 3 --retry-max-time 60 https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce
+sudo systemctl enable docker
+sleep 5
+
 # get the manifest from the vault
 az keyvault secret download --vault-name ${vaultName} --file manifest.json --name manifest
 
@@ -32,6 +41,9 @@ do
     base64 -d node$i > data$i.tar.gz
     tar xvfz data$i.tar.gz
 done
+
+# create the genesis
+polygon-edge genesis --block-gas-limit 10000000 --epoch-size 10 --consensus polybft --bridge-json-rpc http://10.1.1.50:8545
 
 # fund the validator accounts
 polygon-edge rootchain fund --data-dir data --num $totalNodeCount &> fund.log
