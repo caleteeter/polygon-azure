@@ -51,7 +51,7 @@ var linuxConfiguration = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(1, totalNodes): {
+resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}nic${i}'
   location: location
   properties: {
@@ -76,7 +76,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
   }
 }]
 
-resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(1, totalNodes): {
+resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}vm${v}'
   location: location
   dependsOn: [
@@ -123,7 +123,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for v in range(1, 
   zones: (availabilityZones == '' ? [] : [string(availabilityZones)])
 }]
 
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(1, totalNodes): {
+resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' = [for e in range(0, totalNodes): {
   name: '${uniqueString(resourceGroup().id)}vmext${e}'
   location: location
   parent: vm[e]
