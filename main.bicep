@@ -316,7 +316,7 @@ module validatorVmModule 'modules/validatorVm.bicep' = {
   }
 }
 
-module rpcVmModule 'modules/rpcVm.bicep' = {
+module rpcVmModule 'modules/rpcVm.bicep' = if (rpcEnabled) {
   name: 'rpcDeploy'
   dependsOn: [
     deploymentScript
@@ -339,7 +339,7 @@ module rpcVmModule 'modules/rpcVm.bicep' = {
   }
 }
 
-module idxVmModule 'modules/idxVm.bicep' = {
+module idxVmModule 'modules/idxVm.bicep' = if (indexerEnabled) {
   name: 'idxDeploy'
   dependsOn: [
     deploymentScript
