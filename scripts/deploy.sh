@@ -36,7 +36,7 @@ mv data3 data2
 mv data4 data3
 
 # generate secrets
-for i in $(eval echo {0..$totalNodeCount} )
+for i in $(eval echo {0..$((totalNodeCount - 1))} )
 do
     tar -czvf data$i.tar.gz data$i
     base64 data$i.tar.gz > node$i
