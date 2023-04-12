@@ -310,7 +310,7 @@ module validatorVmModule 'modules/validatorVm.bicep' = {
     managedIdentity: managedIdentity.id
     nsg: nsg.id
     subnetId: vnet.properties.subnets[0].id
-    totalNodes: 4
+    totalNodes: 5
     availabilityZones: validatorAvailabilityZones
     polygonVersion: polygonVersion
   }
