@@ -5,8 +5,6 @@ vaultName=$2
 nodeId=$3
 polygonVersion=$4
 
-nodeId=$((nodeId - 1))
-
 # install azcli tools
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
