@@ -136,7 +136,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-11-01' =
       fileUris: [
         'https://raw.githubusercontent.com/caleteeter/polygon-azure/main/scripts/clientDeploy.sh'
       ]
-      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity} ${akvName} ${int(e)+1} ${polygonVersion}'
+      commandToExecute: '/bin/bash clientDeploy.sh ${managedIdentity} ${akvName} ${e} ${polygonVersion}'
     }
   }
 }]
