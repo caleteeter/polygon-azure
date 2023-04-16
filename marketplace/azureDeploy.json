@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.1.55165",
-      "templateHash": "15890080630011577207"
+      "templateHash": "2609909200343595974"
     }
   },
   "parameters": {
@@ -655,7 +655,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.16.1.55165",
-              "templateHash": "2686056594838152234"
+              "templateHash": "6687898293660484928"
             }
           },
           "parameters": {
@@ -765,7 +765,7 @@
                   {
                     "name": "ipconfig1",
                     "properties": {
-                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(0, parameters('totalNodes'))[copyIndex()]), 10))]",
+                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(0, parameters('totalNodes'))[copyIndex()]), 11))]",
                       "privateIPAllocationMethod": "Static",
                       "subnet": {
                         "id": "[parameters('subnetId')]"
