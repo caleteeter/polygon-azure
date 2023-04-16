@@ -59,7 +59,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAddress: '10.1.1.${int(i)+10}'
+          privateIPAddress: '10.1.1.${int(i)+11}'
           privateIPAllocationMethod: 'Static'
           subnet: {
             id: subnetId 
