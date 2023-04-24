@@ -57,15 +57,15 @@ var linuxConfiguration = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(4, totalNodes): {
-  name: '${uniqueString(resourceGroup().id)}nic${i}'
+resource nic 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i in range(0, totalNodes): {
+  name: '${uniqueString(resourceGroup().id)}nic${int(i)+4}'
   location: location
   properties: {
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAddress: '10.1.1.${int(i)+10}'
+          privateIPAddress: '10.1.1.${int(i)+15}'
           privateIPAllocationMethod: 'Static'
           subnet: {
             id: subnetId 
