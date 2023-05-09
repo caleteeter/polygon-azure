@@ -45,7 +45,7 @@ param indexerAvailabilityZones string = ''
 // this is used to ensure uniqueness to naming (making it non-deterministic)
 param rutcValue string = utcNow()
 
-var polygonVersion = '0.9.0'
+var polygonVersion = '0.8.1'
 
 var loadBalancerName = '${uniqueString(resourceGroup().id)}lb'
 
