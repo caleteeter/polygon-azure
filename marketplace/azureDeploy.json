@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.16.2.56959",
-      "templateHash": "18083105693180725957"
+      "templateHash": "2441028272161021021"
     }
   },
   "parameters": {
@@ -109,7 +109,7 @@
     }
   },
   "variables": {
-    "polygonVersion": "0.8.1",
+    "polygonVersion": "0.9.0",
     "loadBalancerName": "[format('{0}lb', uniqueString(resourceGroup().id))]",
     "roleId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
   },
