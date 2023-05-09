@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.16.1.55165",
-      "templateHash": "2609909200343595974"
+      "version": "0.16.2.56959",
+      "templateHash": "18083105693180725957"
     }
   },
   "parameters": {
@@ -406,8 +406,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "15288605691885772389"
+              "version": "0.16.2.56959",
+              "templateHash": "15839651698632364743"
             }
           },
           "parameters": {
@@ -654,8 +654,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "6687898293660484928"
+              "version": "0.16.2.56959",
+              "templateHash": "11634222873539186496"
             }
           },
           "parameters": {
@@ -931,8 +931,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "5685942002421591589"
+              "version": "0.16.2.56959",
+              "templateHash": "493995113338777292"
             }
           },
           "parameters": {
@@ -1043,18 +1043,18 @@
             {
               "copy": {
                 "name": "nic",
-                "count": "[length(range(4, parameters('totalNodes')))]"
+                "count": "[length(range(0, parameters('totalNodes')))]"
               },
               "type": "Microsoft.Network/networkInterfaces",
               "apiVersion": "2022-07-01",
-              "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), range(4, parameters('totalNodes'))[copyIndex()])]",
+              "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 4))]",
               "location": "[parameters('location')]",
               "properties": {
                 "ipConfigurations": [
                   {
                     "name": "ipconfig1",
                     "properties": {
-                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(4, parameters('totalNodes'))[copyIndex()]), 10))]",
+                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(0, parameters('totalNodes'))[copyIndex()]), 15))]",
                       "privateIPAllocationMethod": "Static",
                       "subnet": {
                         "id": "[parameters('subnetId')]"
@@ -1117,15 +1117,15 @@
                 "networkProfile": {
                   "networkInterfaces": [
                     {
-                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(4, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]"
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 4)))]"
                     }
                   ]
                 }
               },
               "zones": "[if(equals(parameters('availabilityZones'), ''), createArray(), createArray(string(parameters('availabilityZones'))))]",
               "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(4, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]",
-                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(4, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 4)))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 4)))]"
               ]
             },
             {
@@ -1224,8 +1224,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.16.1.55165",
-              "templateHash": "748493996621990122"
+              "version": "0.16.2.56959",
+              "templateHash": "14962400521573070349"
             }
           },
           "parameters": {
@@ -1336,18 +1336,18 @@
             {
               "copy": {
                 "name": "nic",
-                "count": "[length(range(6, parameters('totalNodes')))]"
+                "count": "[length(range(0, parameters('totalNodes')))]"
               },
               "type": "Microsoft.Network/networkInterfaces",
               "apiVersion": "2022-07-01",
-              "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[copyIndex()])]",
+              "name": "[format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[copyIndex()]), 6))]",
               "location": "[parameters('location')]",
               "properties": {
                 "ipConfigurations": [
                   {
                     "name": "ipconfig1",
                     "properties": {
-                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(6, parameters('totalNodes'))[copyIndex()]), 10))]",
+                      "privateIPAddress": "[format('10.1.1.{0}', add(int(range(0, parameters('totalNodes'))[copyIndex()]), 17))]",
                       "privateIPAllocationMethod": "Static",
                       "subnet": {
                         "id": "[parameters('subnetId')]"
@@ -1410,15 +1410,15 @@
                 "networkProfile": {
                   "networkInterfaces": [
                     {
-                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]"
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 6)))]"
                     }
                   ]
                 }
               },
               "zones": "[if(equals(parameters('availabilityZones'), ''), createArray(), createArray(string(parameters('availabilityZones'))))]",
               "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]",
-                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), range(6, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 6)))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}nic{1}', uniqueString(resourceGroup().id), add(int(range(0, parameters('totalNodes'))[range(0, parameters('totalNodes'))[copyIndex()]]), 6)))]"
               ]
             },
             {
