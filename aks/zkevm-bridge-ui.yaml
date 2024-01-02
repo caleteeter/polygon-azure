@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zkevm-bridge-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zkevm-bridge-ui
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: zkevm-bridge-ui
+          image: hermeznetwork/zkevm-bridge-ui:latest
+          env:
+            - name: ETHEREUM_RPC_URL
+              value: http://${COMMON_HOST}:8545
+            - name: ETHEREUM_EXPLORER_URL
+              value: http://${COMMON_HOST}:4000
+            - name: ETHEREUM_BRIDGE_CONTRACT_ADDRESS
+              value:
+            - name: ETHEREUM_FORCE_UPDATE_GLOBAL_EXIT_ROOT
+              value: true
+            - name: ETHEREUM_PROOF_OF_EFFICIENCY_CONTRACT_ADDRESS
+              value:
+            - name: POLYGON_ZK_EVM_RPC_URL
+              value: http://${COMMON_HOST}:8123
+            - name: POLYGON_ZK_EVM_EXPLORER_URL
+              value: http://${COMMON_HOST}:4001
+            - name: POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS
+              value:
+            - name: POLYGON_ZK_EVM_NETWORK_ID
+              value: 1
+            - name: BRIDGE_API_URL
+              value: http://${COMMON_HOST}:8080
+            - name: ENABLE_FIAT_EXCHANGE_RATES
+              value: false
+            - name: ENABLE_OUTDATED_NETWORK_MODAL
+              value: false
+            - name: ENABLE_DEPOSIT_WARNING
+              value: true
+            - name: ENABLE_REPORT_FORM
+              value: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8088
+              name: bridge-service

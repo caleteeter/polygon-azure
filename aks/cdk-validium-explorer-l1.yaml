@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-explorer-l1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-explorer-l1
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-explorer-l1
+          image: hermeznetwork/zkevm-explorer:latest
+          env:
+            - name: NETWORK
+              value: ETH
+            - name: SUBNETWORK
+              value: Local Ethereum
+            - name: COIN
+              value: ETH
+            - name: ETHEREUM_JSONRPC_VARIANT
+              value: geth
+            - name: ETHEREUM_JSONRPC_HTTP_URL
+              value: http://cdk-validium-mock-l1-network:8545
+            - name: DATABASE_URL
+              value: postgres://l1_explorer_user:l1_explorer_password@cdk-validium-explorer-l1-db:5432/l1_explorer_db
+            - name: ECTO_USE_SSL
+              value: false
+            - name: MIX_ENV
+              value: prod
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 4000
+              name: explorer-web

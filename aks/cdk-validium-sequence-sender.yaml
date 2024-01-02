@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-sequencer-sender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-sequencer-sender
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-sequencer-sender
+          image: hermeznetwork/cdk-validium-node:develop
+          env:
+            - name: CDK_VALIDIUM_NODE_STATEDB_HOST
+              value: 
+            - name: CDK_VALIDIUM_NODE_POOL_DB_HOST
+              value:
+            - name: CDK_VALIDIUM_NODE_SEQUENCER_SENDER_ADDRESS
+              value:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

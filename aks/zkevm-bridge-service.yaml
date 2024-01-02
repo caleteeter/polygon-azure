@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zkevm-bridge-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zkevm-bridge-service
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: zkevm-bridge-service
+          image: hermeznetwork/zkevm-bridge-service:v0.2.0
+          env:
+            - name: ZKEVM_BRIDGE_DATABASE_USER
+              value: test_user
+            - name: ZKEVM_BRIDGE_DATABASE_PASSWORD
+              value: test_password
+            - name: ZKEVM_BRIDGE_DATABASE_NAME
+              value: test_db
+            - name: ZKEVM_BRIDGE_DATABASE_HOST
+              value: zkevm-bridge-db
+            - name: ZKEVM_BRIDGE_DATABASE_PORT
+              value: 5432
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8080
+              name: rpc
+            - containerPort: 9090
+              name: web-socket

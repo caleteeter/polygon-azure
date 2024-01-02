@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-deploy-sepolia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-deploy-sepolia
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-deploy-sepolia
+          image: snapchain/cdk-validium-contracts
+          env:
+            - name: MNEMONIC
+              value: 
+            - name: INFURA_PROJECT_ID
+              value:
+            - name: HARDHAT_NETWORK
+              value: sepolia
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: grafana
+          image: grafana/grafana-oss
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: cdk-validium
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: cdk-validium
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 3000
+              name: grafana-web

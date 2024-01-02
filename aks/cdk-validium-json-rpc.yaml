@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-json-rpc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-json-rpc
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-json-rpc
+          image: hermeznetwork/cdk-validium-node:develop
+          env:
+            - name: CDK_VALIDIUM_NODE_STATEDB_HOST
+              value: 
+            - name: CDK_VALIDIUM_NODE_POOL_DB_HOST
+              value:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8123
+              name: rpc
+            - containerPort: 8133
+              name: web-socket
+            - containerPort: 9091
+              name: metrics

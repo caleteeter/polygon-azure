@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dac-setup-committee
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dac-setup-committee
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: dac-setup-committee
+          image: snapchain/cdk-validium-contracts
+          env:
+            - name: JSONRPC_HTTP_URL
+              value: http://cdk-validium-mock-l1-network:8545
+            - name: DAC_URL
+              value: http://cdk-validium-data-availability:8444
+            - name: DAC_ADDRESS
+              value:
+            - name: DEPLOYER_PRIVATE_KEY
+              value:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

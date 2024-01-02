@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegraf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegraf
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: telegraf
+          image: telegraf
+          env:
+            - name: POSTGRES_HOST
+              value: 
+            - name: POSTGRES_USER
+              value:
+            - name: POSTGRES_PASSWORD
+              value:
+            - name: POSTGRES_DB
+              value:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

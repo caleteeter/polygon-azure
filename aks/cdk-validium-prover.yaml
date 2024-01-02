@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-prover
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-prover
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-prover
+          image: hermeznetwork/zkevm-prover:v2.2.0
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 50052
+              name: mock prover
+            - containerPort: 50061
+              name: MT
+            - containerPort: 50071
+              name: Executor

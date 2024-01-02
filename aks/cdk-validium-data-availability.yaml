@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-data-availability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-data-availability
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-data-availability
+          image: hermeznetwork/cdk-data-availability:v0.0.1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8444
+              name: rpc

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-sync
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-sync
+          image: hermeznetwork/cdk-validium-node:develop
+          env:
+            - name: CDK_VALIDIUM_NODE_STATEDB_HOST
+              value: 
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

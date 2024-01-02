@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-mock-l1-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-mock-l1-network
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-mock-l1-network
+          image: snapchain/geth-cdk-validium-contracts
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8545
+              name: rpc
+            - containerPort: 8546
+              name: web-socket

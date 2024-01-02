@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdk-validium-permissionless-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdk-validium-permissionless-node
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: cdk-validium-permissionless-node
+          image: hermeznetwork/cdk-validium-node:develop
+          env:
+            - name: CDK_VALIDIUM_NODE_ISTRUSTEDSEQUENCER
+              value: false
+            - name: CDK_VALIDIUM_NODE_STATEDB_USER
+              value: test_user
+            - name: CDK_VALIDIUM_NODE_STATEDB_PASSWORD
+              value: test_password
+            - name: CDK_VALIDIUM_NODE_STATEDB_NAME
+              value: state_db
+            - name: CDK_VALIDIUM_NODE_STATEDB_HOST
+              value: cdk-validium-permissionless-db
+            - name: CDK_VALIDIUM_NODE_POOL_DB_USER
+              value: test_user
+            - name: CDK_VALIDIUM_NODE_POOL_DB_PASSWORD
+              value: test_password
+            - name: CDK_VALIDIUM_NODE_POOL_DB_NAME
+              value: pool_db
+            - name: CDK_VALIDIUM_NODE_POOL_DB_HOST
+              value: cdk-validium-permissionless-db
+            - name: CDK_VALIDIUM_NODE_RPC_PORT
+              value: 8125
+            - name: CDK_VALIDIUM_NODE_RPC_SEQUENCERNODEURI
+              value: http://cdk-validium-json-rpc:8123
+            - name: CDK_VALIDIUM_NODE_MTCLIENT_URI
+              value: cdk-validium-permissionless-prover:50061
+            - name: CDK_VALIDIUM_NODE_EXECUTOR_URI
+              value: cdk-validium-permissionless-prover:50071
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          ports:
+            - containerPort: 8125
+              name: rpc
